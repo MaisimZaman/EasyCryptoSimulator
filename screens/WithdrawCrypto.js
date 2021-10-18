@@ -41,6 +41,8 @@ export default function WithDrawCrypto(props) {
                 qunaity: totalOwnedCrypto - parseInt(currentNumber)
             })
 
+            Alert(`Successfuly sold. Cashed out for $ ${Math.round(100 * currentPrice * parseInt(currentNumber ? currentNumber : "0"))/100}`)
+
         }
         else {
             Alert(`Transaction failed. You do not own this amount of ${coinName} to sell`)
@@ -76,7 +78,8 @@ export default function WithDrawCrypto(props) {
           <Text style={styles.infoText1}>{coinName} Current Price: ${Math.round(100 * currentPrice)/100} CAD</Text>
           <Text style={styles.infoText2}>Avalible coins: {totalVolume}</Text>
           <Text style={styles.infoText3}>Avalible credit: {auth.currentUser.totalCredit}</Text>
-          <Text style={styles.infoText4}>Total Price:   ${ Math.round(100 * currentPrice * parseInt(currentNumber ? currentNumber : "0"))/100} CAD</Text>
+          <Text style={styles.infoText3}>Total holdings: {totalOwnedCrypto}</Text>
+          <Text style={styles.infoText4}>Total Cashed out:   ${ Math.round(100 * currentPrice * parseInt(currentNumber ? currentNumber : "0"))/100} CAD</Text>
 
 
 
