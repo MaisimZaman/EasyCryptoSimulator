@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
     View,
@@ -19,7 +20,8 @@ import { auth, db } from '../services/firebase';
 
 import { useDispatch } from 'react-redux';
 
-const Portfolio = ({ getHoldings, myHoldings }) => {
+
+const Portfolio = ({ getHoldings, myHoldings, navigation }) => {
 
     const dispatch = useDispatch();
 
@@ -45,7 +47,7 @@ const Portfolio = ({ getHoldings, myHoldings }) => {
        
 
         
-    }, [selectedCoin])
+    }, [selectedCoin, navigation])
 
    
 
@@ -79,7 +81,7 @@ const Portfolio = ({ getHoldings, myHoldings }) => {
 
                 <BalanceInfo
                     title="Current Balance"
-                    displayAmount={totalWallet}
+                    displayAmount={totalWallet.toFixed(2)}
                     changePct={percChange}
                     containerStyle={{
                         marginTop: SIZES.radius,

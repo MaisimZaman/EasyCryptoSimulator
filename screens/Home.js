@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -22,32 +22,58 @@ import { isIphoneX } from 'react-native-iphone-x-helper';
 
 import { auth, db } from '../services/firebase';
 
+
 const Home = ({ getHoldings, getCoinMarket, myHoldings, coins, navigation }) => {
 
     const [selectedCoin, setSelectedCoin] = React.useState(null)
     
 
-    const [purchaseQuaintiy, setPurchaseQuainity] = React.useState(0)
-
-    const modalAnimatedValue = React.useRef(new Animated.Value(0)).current;
-
     const [newHoldings, setHoldings] = useState([])
 
     const [isSelectedInHolding, setSelectedInHolding] = useState(false)
 
-    React.useEffect(() => {
-        const unsubscribe = db.collection('CryptoPortfolio')
-                            .doc(auth.currentUser.uid).collection('portfoilio')
-                            .onSnapshot((snapshot) => setHoldings(snapshot.docs.map(doc => ({
-                                id: doc.data().cryptoId,
-                                qty: doc.data().qunaity
-                            }))))
+    const [totalCredit, setTotalCredit] = useState(0);
 
 
-        return unsubscribe;
+    useEffect(() => {
+        async function main(){
+            await db.collection('CryptoPortfolio')
+            .doc(auth.currentUser.uid).collection('portfoilio')
+            .onSnapshot((snapshot) => executeLoop(snapshot.docs.map(doc => ({
+                id: doc.data().cryptoId,
+                qty: doc.data().qunaity
+            }))))
+
+            async function executeLoop(array){
+                setHoldings(array)
+                
+            }
+
+            await db.collection("users")
+                .doc(auth.currentUser.uid)
+                .get()
+                .then((doc) => {
+                    setTotalCredit(doc.data().totalCredit)
+                })
+
+            
+
+
+        }
+
+        main()
+        
+
     }, [navigation])
 
-    React.useEffect(() => {
+    
+    
+    
+
+    
+
+    useEffect(() => {
+        
         if (selectedCoin != null){
 
             const findMatch = newHoldings.filter(function(value) {
@@ -89,7 +115,7 @@ const Home = ({ getHoldings, getCoinMarket, myHoldings, coins, navigation }) => 
             //console.log(newHoldings)
             getHoldings(newHoldings)
             getCoinMarket()
-        }, [])
+        }, [newHoldings])
     )
 
     //let totalWallet = Math.round(100 * myHoldings.reduce((a, b) => a + (b.total || 0), 0)/100)
@@ -135,7 +161,8 @@ const Home = ({ getHoldings, getCoinMarket, myHoldings, coins, navigation }) => 
                 {/* Balance Info */}
                 <BalanceInfo
                     title="Your Wallet"
-                    displayAmount={totalWallet}
+                    totalCredit={totalCredit.toFixed(2)}
+                    displayAmount={totalWallet.toFixed(2)}
                     changePct={percChange}
                     containerStyle={{
                         marginTop: isIphoneX() ? 50 : 20
@@ -152,7 +179,7 @@ const Home = ({ getHoldings, getCoinMarket, myHoldings, coins, navigation }) => 
                     }}
                 >
                     <IconTextButton
-                        label="Transfer"
+                        label="Purchase"
                         icon={icons.send}
                         
                         containerStyle={{
@@ -160,13 +187,13 @@ const Home = ({ getHoldings, getCoinMarket, myHoldings, coins, navigation }) => 
                             height: 40,
                             marginRight: SIZES.radius
                         }}
-                        onPress={() => {navigation.navigate("BuyCrypto", {
+                        onPress={selectedCoin != null ? () =>  {navigation.navigate("BuyCrypto", {
                             coinName: selectedCoin.id,
                             totalVolume: selectedCoin.total_volume,
                             currentPrice: selectedCoin.sparkline_in_7d.price[selectedCoin.sparkline_in_7d.price.length - 1]
 
 
-                        }); }}
+                        }) }: () => alert("Pick a coin to purchase ")}
                     />
 
                     {renderWithdrawButton()}
@@ -175,30 +202,7 @@ const Home = ({ getHoldings, getCoinMarket, myHoldings, coins, navigation }) => 
         )
     }
 
-    function renderBuyModal(){
-        return (
-            
-                <Animated.View
-                    style={{
-                        position: 'absolute',
-                        left: 0,
-                        top: modalY,
-                        width: "100%",
-                        padding: SIZES.padding,
-                        backgroundColor: COLORS.primary
-                    }}
-                >
-                    <TextInput 
-                    style={{color: "white"}}
-                    keyboardType = 'numeric'
-                    onChangeText = { (num)=> setPurchaseQuainity(num)}
-                    value = {purchaseQuaintiy}
-                /> 
-                    
-                </Animated.View>
-            
-        )
-    }
+    
 
     return (
         <MainLayout>
@@ -210,6 +214,7 @@ const Home = ({ getHoldings, getCoinMarket, myHoldings, coins, navigation }) => 
             >
                 {/* Header - Wallet Info */}
                 {renderWalletInfoSection()}
+                
 
                 {/* Chart */}
                 <Chart

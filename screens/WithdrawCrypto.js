@@ -1,20 +1,42 @@
 import React, {useState, useEffect} from 'react'
-import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, Alert, Button } from 'react-native'
 import { SIZES, COLORS, FONTS, dummyData, icons } from "../constants";
 import CalcButton from '../constants/CalcButton';
 import { Icon } from 'react-native-elements/dist/icons/Icon';
 import { auth, db } from '../services/firebase';
-import { Button } from 'react-native-elements/dist/buttons/Button';
+
 
 export default function WithDrawCrypto(props) {
 
     const {coinName,totalVolume, currentPrice} = props.route.params
+
+    
+
+    
     
     const [darkMode, setDarkMode] = useState(true);
     const [currentNumber, setCurrentNumber] = useState('0');
     const [totalOwnedCrypto, setTotalOwnedCrypto] = useState(0)
     const [docId, setDocId] = useState('')
+    const [totalCredit, setTotalCredit] = useState(0)
     const buttons = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 'DEL', ];
+
+
+    useEffect(() => {
+      async function main(){
+        await db.collection("users")
+                .doc(auth.currentUser.uid)
+                .get()
+                .then((doc) => {
+                    setTotalCredit(doc.data().totalCredit)
+                })
+
+      }
+
+      main()
+      
+
+    }, [])
 
     useEffect(() => {
         db.collection("CryptoPortfolio")
@@ -33,6 +55,7 @@ export default function WithDrawCrypto(props) {
 
     function sellCrypto(){
         if (parseInt(currentNumber) <= totalOwnedCrypto){
+          if (totalOwnedCrypto != parseInt(currentNumber)){
             db.collection("CryptoPortfolio")
             .doc(auth.currentUser.uid)
             .collection("portfoilio")
@@ -41,11 +64,28 @@ export default function WithDrawCrypto(props) {
                 qunaity: totalOwnedCrypto - parseInt(currentNumber)
             })
 
-            Alert(`Successfuly sold. Cashed out for $ ${Math.round(100 * currentPrice * parseInt(currentNumber ? currentNumber : "0"))/100}`)
+          }
+          else {
+            db.collection("CryptoPortfolio")
+            .doc(auth.currentUser.uid)
+            .collection("portfoilio")
+            .doc(docId)
+            .delete()
+
+          }
+            
+
+            db.collection("users")
+                  .doc(auth.currentUser.uid)
+                  .update({
+                    totalCredit: totalCredit + parseInt(currentNumber) * currentPrice
+                  })
+
+            alert(`Successfuly sold. Cashed out for $ ${Math.round(100 * currentPrice * parseInt(currentNumber ? currentNumber : "0"))/100}`)
 
         }
         else {
-            Alert(`Transaction failed. You do not own this amount of ${coinName} to sell`)
+            alert(`Transaction failed. You do not own this amount of ${coinName} to sell`)
         }
 
         
@@ -122,7 +162,7 @@ export default function WithDrawCrypto(props) {
         </View>
       </View>
       <View style={{marginTop: 70}}>
-      <Button  title="Sell Crypto"  onPress={sellCrypto} style={{backgroundColor: "#000000"}}></Button>
+      <Button color="#0000FF"    title="Sell Crypto"  onPress={sellCrypto} style={{backgroundColor: "#000000"}}></Button>
     </View>
     </>
     )
@@ -179,31 +219,31 @@ const styles = StyleSheet.create({
         fontSize: 28,
     },
     infoText1: {
-        color: "red",
-        fontSize: 20,
-        marginRight: 140,
-        marginBottom: 10
-
-    },
-    infoText2: {
-      color: "red",
-      fontSize: 20,
+      color: "#535DF2",
+      fontSize: 18,
       marginRight: 140,
-      marginBottom: 10
+      marginBottom: 13
 
   },
-  infoText3: {
-    color: "red",
-    fontSize: 20,
+  infoText2: {
+    color: "#535DF2",
+    fontSize: 18,
     marginRight: 140,
-    marginBottom: 10
+    marginBottom: 12
+
+},
+infoText3: {
+  color: "#535DF2",
+  fontSize: 18,
+  marginRight: 140,
+  marginBottom: 11
 
 },
 infoText4: {
-  color: "red",
-  fontSize: 20,
-  marginRight: 140,
-  marginBottom: -60
+color: "#535DF2",
+fontSize: 18,
+marginRight: 140,
+marginBottom: 10
 
 },
 })

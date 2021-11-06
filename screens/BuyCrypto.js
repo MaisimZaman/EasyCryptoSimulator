@@ -1,10 +1,12 @@
+
 import React, {useState, useEffect} from 'react'
-import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, Alert, Button } from 'react-native'
 import { SIZES, COLORS, FONTS, dummyData, icons } from "../constants";
 import CalcButton from '../constants/CalcButton';
 import { Icon } from 'react-native-elements/dist/icons/Icon';
 import { auth, db } from '../services/firebase';
-import { Button } from 'react-native-elements/dist/buttons/Button';
+
+
 
 export default function BuyCrypto(props) {
 
@@ -16,6 +18,25 @@ export default function BuyCrypto(props) {
     const [darkMode, setDarkMode] = useState(true);
     const [currentNumber, setCurrentNumber] = useState('0');
     const buttons = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 'DEL', ];
+    const [totalCredit, setTotalCredit] = useState(0)
+
+
+    //get users credit
+    useEffect(() => {
+      async function main(){
+        await db.collection("users")
+                .doc(auth.currentUser.uid)
+                .get()
+                .then((doc) => {
+                    setTotalCredit(doc.data().totalCredit)
+                })
+
+      }
+
+      main()
+      
+
+    }, [])
 
     //Check if the doucment exists
     useEffect(() => {
@@ -35,9 +56,8 @@ export default function BuyCrypto(props) {
 
     function createPurchaseOrder(){
         
-
         if (totalVolume >= parseInt(currentNumber)){
-            if (parseInt(currentNumber) * currentPrice < 2000000000){
+            if (parseInt(currentNumber) * currentPrice < totalCredit){
               if (existingCryptoQty != undefined){
                 db.collection("CryptoPortfolio")
                   .doc(auth.currentUser.uid)
@@ -46,8 +66,15 @@ export default function BuyCrypto(props) {
                   .update({
                       qunaity: existingCryptoQty + parseInt(currentNumber)
                   })
+
+                db.collection("users")
+                  .doc(auth.currentUser.uid)
+                  .update({
+                    totalCredit: totalCredit - parseInt(currentNumber) * currentPrice
+                  })
+
                   Alert.alert("Purchase was successful, Thank you and happy trading.")
-              }
+              } 
               else {
                 db.collection("CryptoPortfolio")
                     .doc(auth.currentUser.uid)
@@ -60,9 +87,11 @@ export default function BuyCrypto(props) {
                         
                     })
 
-                auth.currentUser.updateProfile({
-                  totalCredit: auth.currentUser.totalCredit - parseInt(currentNumber) * currentPrice
-                })
+                    db.collection("users")
+                    .doc(auth.currentUser.uid)
+                    .update({
+                      totalCredit: totalCredit - parseInt(currentNumber) * currentPrice
+                    })
 
                 
 
@@ -103,19 +132,20 @@ export default function BuyCrypto(props) {
   
   
     return (
-        <>
+        <View>
       <View>
         <View style={styles.results}>
 
+        <Text style={styles.resultText}>{currentNumber}</Text>
           <Text style={styles.infoText1}>{coinName} Current Price: ${Math.round(100 * currentPrice)/100} CAD</Text>
           <Text style={styles.infoText2}>Avalible coins: {totalVolume}</Text>
-          <Text style={styles.infoText3}>Avalible credit: {auth.currentUser.totalCredit}</Text>
+          <Text style={styles.infoText3}>Avalible credit: {totalCredit.toFixed(2)}</Text>
           <Text style={styles.infoText4}>Total Price:   ${ Math.round(100 * currentPrice * parseInt(currentNumber ? currentNumber : "0"))/100} CAD</Text>
 
 
 
           
-          <Text style={styles.resultText}>{currentNumber}</Text>
+          
         </View>
         <View style={styles.buttons}>
           {buttons.map((btn) =>
@@ -152,10 +182,16 @@ export default function BuyCrypto(props) {
           )}
         </View>
       </View>
-      <View style={{marginTop: 70}}>
-      <Button  title="Place order"  onPress={createPurchaseOrder} style={{backgroundColor: "#000000"}}></Button>
+      <View style={{marginTop: 80}}>
+      <Button
+      style={{paddingVertical: 12, paddingHorizontal: 32,borderWidth: 2}}
+      color="#0000FF"  
+      title="Place order"  
+      onPress={createPurchaseOrder} 
+      
+      ></Button>
     </View>
-    </>
+    </View>
     )
   
 }
@@ -172,6 +208,7 @@ const styles = StyleSheet.create({
         maxHeight: 45,
         color: '#FF6666',
         margin: 15,
+        marginBottom: 10,
         fontSize: 35,
     },
     historyText: {
@@ -210,31 +247,31 @@ const styles = StyleSheet.create({
         fontSize: 28,
     },
     infoText1: {
-        color: "red",
-        fontSize: 20,
+        color: "#535DF2",
+        fontSize: 18,
         marginRight: 140,
-        marginBottom: 10
+        marginBottom: 13
 
     },
     infoText2: {
-      color: "red",
-      fontSize: 20,
+      color: "#535DF2",
+      fontSize: 18,
       marginRight: 140,
-      marginBottom: 10
+      marginBottom: 12
 
   },
   infoText3: {
-    color: "red",
-    fontSize: 20,
+    color: "#535DF2",
+    fontSize: 18,
     marginRight: 140,
-    marginBottom: 10
+    marginBottom: 11
 
 },
 infoText4: {
-  color: "red",
-  fontSize: 20,
+  color: "#535DF2",
+  fontSize: 18,
   marginRight: 140,
-  marginBottom: -60
+  marginBottom: 10
 
 },
 })

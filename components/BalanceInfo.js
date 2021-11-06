@@ -7,11 +7,12 @@ import {
 import { SIZES, COLORS, FONTS, icons } from "../constants";
 import { auth } from '../services/firebase';
 
-const BalanceInfo = ({ title, displayAmount, changePct, containerStyle }) => {
+function BalanceInfo({ title, displayAmount, changePct, containerStyle, totalCredit }){
     return (
         <View style={{ ...containerStyle }}>
             {/* Title */}
             <Text style={{ ...FONTS.h3, color: COLORS.lightGray3 }}>{title}</Text>
+            <Text style={{ ...FONTS.h3, color: COLORS.lightGray3, marginLeft: 190 }}>{"Total Credit"}</Text>
 
             {/* Figures */}
             <View
@@ -22,6 +23,11 @@ const BalanceInfo = ({ title, displayAmount, changePct, containerStyle }) => {
             >
                 <Text style={{ ...FONTS.h3, color: COLORS.lightGray3 }}>$</Text>
                 <Text style={{ marginLeft: SIZES.base, ...FONTS.h2, color: COLORS.white }}>{displayAmount.toLocaleString()}</Text>
+                <Text style={{ color: COLORS.lightGray3, ...FONTS.h3 }}> CAD</Text>
+                <Text >{auth.currentUser.totalCredit}</Text>
+
+                <Text style={{ ...FONTS.h3, color: COLORS.lightGray3 }}>$</Text>
+                <Text style={{ marginLeft: SIZES.base, ...FONTS.h2, color: COLORS.white }}>{totalCredit}</Text>
                 <Text style={{ color: COLORS.lightGray3, ...FONTS.h3 }}> CAD</Text>
                 <Text >{auth.currentUser.totalCredit}</Text>
                 
